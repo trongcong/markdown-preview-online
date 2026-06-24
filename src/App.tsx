@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
+import type { DragEvent } from 'react'
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string'
 import type { LayoutMode } from './types'
 import { useTabs } from './hooks/useTabs'
@@ -10,7 +11,7 @@ import { Editor } from './components/Editor'
 import { Preview, type PreviewHandle } from './components/Preview'
 
 export default function App() {
-  const { tabs, activeTab, activeTabId, setActiveTabId, addTab, closeTab, renameTab, updateContent, loadShared } =
+  const { tabs, activeTab, activeTabId, setActiveTabId, addTab, closeTab, renameTab, updateContent, loadShared, loadFile } =
     useTabs()
 
   const [layoutMode, setLayoutMode] = useLocalStorage<LayoutMode>('mpo-layout', 'split')
@@ -24,6 +25,52 @@ export default function App() {
 
   const [shareCopied, setShareCopied] = useState(false)
   const shareTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Drag & drop .md files
+  const [isDraggingFile, setIsDraggingFile] = useState(false)
+  const dragCounter = useRef(0)
+
+  const handleDragEnter = useCallback((e: DragEvent) => {
+    e.preventDefault()
+    if (Array.from(e.dataTransfer.items).some((i) => i.kind === 'file')) {
+      dragCounter.current++
+      setIsDraggingFile(true)
+    }
+  }, [])
+
+  const handleDragLeave = useCallback((e: DragEvent) => {
+    e.preventDefault()
+    dragCounter.current--
+    if (dragCounter.current <= 0) {
+      dragCounter.current = 0
+      setIsDraggingFile(false)
+    }
+  }, [])
+
+  const handleDragOver = useCallback((e: DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'copy'
+  }, [])
+
+  const handleDrop = useCallback((e: DragEvent) => {
+    e.preventDefault()
+    dragCounter.current = 0
+    setIsDraggingFile(false)
+    const files = Array.from(e.dataTransfer.files).filter((f) =>
+      f.name.endsWith('.md') || f.name.endsWith('.markdown') || f.type === 'text/markdown' || f.type === 'text/plain'
+    )
+    files.forEach((file) => {
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        const content = ev.target?.result
+        if (typeof content === 'string') {
+          const title = file.name.replace(/\.(md|markdown)$/i, '')
+          loadFile(content, title)
+        }
+      }
+      reader.readAsText(file)
+    })
+  }, [loadFile])
 
   const containerRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<PreviewHandle>(null)
@@ -107,6 +154,14 @@ export default function App() {
     URL.revokeObjectURL(url)
   }, [activeTab.content, activeTab.title])
 
+  // Export PDF via browser print dialog
+  const handleExportPDF = useCallback(() => {
+    const prev = document.title
+    document.title = activeTab.title
+    window.print()
+    document.title = prev
+  }, [activeTab.title])
+
   // Export .html (uses the rendered preview HTML)
   const handleExportHTML = useCallback(() => {
     const inner = previewRef.current?.getHTML() ?? ''
@@ -185,7 +240,27 @@ ${inner}
     showPreview && isDesktop ? { width: `${splitPercent}%` } : undefined
 
   return (
-    <div className="flex flex-col h-screen bg-white overflow-hidden dark:bg-slate-800">
+    <div
+      className="flex flex-col h-screen bg-white overflow-hidden dark:bg-slate-800 relative"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Drag-over overlay */}
+      {isDraggingFile && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-blue-500/10 backdrop-blur-[1px] pointer-events-none">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-blue-400 bg-white/90 dark:bg-slate-800/90 px-14 py-10 shadow-xl">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="12" y1="18" x2="12" y2="12" />
+              <line x1="9" y1="15" x2="15" y2="15" />
+            </svg>
+            <p className="text-base font-semibold text-blue-600 dark:text-blue-400">Drop .md file to open</p>
+          </div>
+        </div>
+      )}
       <Toolbar
         layoutMode={layoutMode}
         onLayoutChange={setLayoutMode}
@@ -202,6 +277,7 @@ ${inner}
         onFontSizeChange={setFontSize}
         onExportMD={handleExportMD}
         onExportHTML={handleExportHTML}
+        onExportPDF={handleExportPDF}
       />
       <TabBar
         tabs={tabs}

@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import type { Tab } from '../types'
 import { useLocalStorage } from './useLocalStorage'
-import { STORAGE_KEY, DEFAULT_CONTENT } from '../constants'
+import { STORAGE_KEY, DEFAULT_CONTENT, NEW_TAB_CONTENT } from '../constants'
 
 function createTab(title = 'Untitled', content = ''): Tab {
   return { id: crypto.randomUUID(), title, content }
@@ -39,7 +39,7 @@ export function useTabs() {
   )
 
   const addTab = useCallback(() => {
-    const tab = createTab('Untitled')
+    const tab = createTab('Untitled', NEW_TAB_CONTENT)
     setTabs((prev) => [...prev, tab])
     setActiveTabId(tab.id)
   }, [setTabs, setActiveTabId])
@@ -82,6 +82,14 @@ export function useTabs() {
     [setState],
   )
 
+  const loadFile = useCallback(
+    (content: string, title: string) => {
+      const tab = createTab(title, content)
+      setState((prev) => ({ tabs: [...prev.tabs, tab], activeTabId: tab.id }))
+    },
+    [setState],
+  )
+
   return {
     tabs,
     activeTab,
@@ -92,5 +100,6 @@ export function useTabs() {
     renameTab,
     updateContent,
     loadShared,
+    loadFile,
   }
 }

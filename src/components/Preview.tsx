@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, lazy, Suspense, forwardRef, useImperativeHandle } from 'react'
+import { useRef, useEffect, useCallback, lazy, Suspense, forwardRef, useImperativeHandle, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
@@ -36,6 +36,35 @@ function getMermaidCode(node: Element | undefined): string | null {
   return textNode ? textNode.value : ''
 }
 
+function CodeBlock({ children, ...props }: React.HTMLAttributes<HTMLPreElement>) {
+  const [copied, setCopied] = useState(false)
+  const preRef = useRef<HTMLPreElement>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
+
+  function handleCopy() {
+    const text = preRef.current?.innerText ?? ''
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <div className="relative group/code">
+      <pre ref={preRef} {...props}>{children}</pre>
+      <button
+        onClick={handleCopy}
+        className="absolute top-2 right-2 opacity-0 group-hover/code:opacity-100 transition-opacity px-2 py-0.5 text-[11px] font-medium rounded bg-white/10 text-slate-300 hover:bg-white/20 border border-white/10 select-none"
+      >
+        {copied ? '✓ Copied' : 'Copy'}
+      </button>
+    </div>
+  )
+}
+
 const markdownComponents = {
   pre({ node, children, ...props }: PreProps) {
     const mermaidCode = getMermaidCode(node)
@@ -44,7 +73,7 @@ const markdownComponents = {
         <MermaidBlock code={mermaidCode} />
       </Suspense>
     )
-    return <pre {...props}>{children}</pre>
+    return <CodeBlock {...props}>{children}</CodeBlock>
   },
 }
 
@@ -90,6 +119,7 @@ export const Preview = forwardRef<PreviewHandle, Props>(function Preview(
       >
         <div
           ref={proseRef}
+          id="print-area"
           className={[
             'prose max-w-none p-5 prose-img:rounded-lg prose-a:text-blue-600 prose-blockquote:border-l-blue-400 prose-blockquote:text-gray-600',
             isDark ? 'prose-invert prose-a:text-blue-400 prose-blockquote:text-slate-400' : '',

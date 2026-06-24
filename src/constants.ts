@@ -1,5 +1,9 @@
 export const STORAGE_KEY = 'markdown-preview-online'
 
+export const NEW_TAB_CONTENT = `# Untitled
+
+`
+
 export const DEFAULT_CONTENT = `# Welcome to Markdown Preview Online
 
 A simple, fast Markdown editor with live preview.

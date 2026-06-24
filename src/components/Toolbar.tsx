@@ -17,6 +17,7 @@ interface Props {
   onFontSizeChange: (size: number) => void
   onExportMD: () => void
   onExportHTML: () => void
+  onExportPDF: () => void
 }
 
 const modes: { mode: LayoutMode; label: string; title: string }[] = [
@@ -44,6 +45,7 @@ export function Toolbar({
   onFontSizeChange,
   onExportMD,
   onExportHTML,
+  onExportPDF,
 }: Props) {
   const [exportOpen, setExportOpen] = useState(false)
   const exportRef = useRef<HTMLDivElement>(null)
@@ -125,6 +127,12 @@ export function Toolbar({
                 onClick={() => { onExportHTML(); setExportOpen(false) }}
               >
                 .html file
+              </button>
+              <button
+                className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 dark:text-slate-300 dark:hover:bg-slate-700"
+                onClick={() => { onExportPDF(); setExportOpen(false) }}
+              >
+                PDF (print)
               </button>
             </div>
           )}

@@ -101,6 +101,36 @@
 .dark .cm-panel button:hover { background: #334155; }
 .dark .cm-panel label { color: #94a3b8; }
 
+/* ── CodeMirror text selection (native browser ::selection) ─────── */
+.cm-editor .cm-content ::selection { background: #93c5fd; }
+.dark .cm-editor .cm-content ::selection { background: #2563eb; }
+
+/* ── Print / Export PDF ──────────────────────────────────────── */
+@media print {
+  /* Flatten React's flex/overflow-hidden layout so content isn't clipped */
+  html, body, #root { height: auto !important; overflow: visible !important; display: block !important; }
+  /* overflow:visible on every node so no ancestor clips the print area */
+  body * { visibility: hidden; overflow: visible !important; }
+  #print-area, #print-area * { visibility: visible !important; }
+
+  #print-area {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    padding: 1.5cm 2cm !important;
+    font-size: 11pt;
+    line-height: 1.7;
+    color: #000 !important;
+    background: #fff !important;
+  }
+  #print-area pre { page-break-inside: avoid; }
+  #print-area h1, #print-area h2, #print-area h3 { page-break-after: avoid; }
+  #print-area table { page-break-inside: avoid; border-collapse: collapse; width: 100%; }
+  #print-area th, #print-area td { border: 1px solid #ccc; padding: 4px 8px; }
+  #print-area a { color: #000; text-decoration: underline; }
+  #print-area img { max-width: 100%; }
+}
+
 /* ── Resize-drag cursor lock ─────────────────────────────────── */
 .is-resizing,
 .is-resizing * {
