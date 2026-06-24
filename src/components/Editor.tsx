@@ -11,65 +11,16 @@ interface Props {
   onChange: (value: string) => void
   onScroll: (ratio: number) => void
   scrollTo: number | null
+  fontSize: number
+  isDark: boolean
 }
 
-// ── Editor theme ───────────────────────────────────────────────
-const editorTheme = EditorView.theme({
-  '&': { height: '100%', fontSize: '15px' },
-  '.cm-scroller': {
-    fontFamily:
-      'ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace',
-    lineHeight: '1.65',
-    overflow: 'auto',
-  },
-  '.cm-content': { padding: '12px 0', caretColor: '#2563eb' },
-  '.cm-line': { padding: '0 16px' },
-  '.cm-gutters': {
-    backgroundColor: '#f8fafc',
-    color: '#94a3b8',
-    border: 'none',
-    borderRight: '1px solid #e2e8f0',
-    userSelect: 'none',
-  },
-  '.cm-lineNumbers .cm-gutterElement': {
-    padding: '0 10px 0 6px',
-    minWidth: '2.5rem',
-    textAlign: 'right',
-    fontSize: '12px',
-  },
-  '.cm-activeLineGutter': { backgroundColor: '#f1f5f9', color: '#475569' },
-  '.cm-activeLine': { backgroundColor: '#f8fafc' },
-  '.cm-cursor, .cm-dropCursor': { borderLeftColor: '#2563eb' },
-  '.cm-selectionBackground': { backgroundColor: '#dbeafe' },
-  '&.cm-focused .cm-selectionBackground': { backgroundColor: '#bfdbfe' },
-})
-
-// ── Markdown syntax colours ────────────────────────────────────
-const mdHighlight = syntaxHighlighting(
-  HighlightStyle.define([
-    { tag: [t.heading1, t.heading2, t.heading3, t.heading4, t.heading5, t.heading6], fontWeight: '700', color: '#0f172a' },
-    { tag: t.strong, fontWeight: '700' },
-    { tag: t.emphasis, fontStyle: 'italic' },
-    { tag: t.strikethrough, textDecoration: 'line-through', color: '#94a3b8' },
-    { tag: t.link, color: '#2563eb', textDecoration: 'underline' },
-    { tag: t.url, color: '#64748b' },
-    { tag: t.monospace, color: '#9d174d', backgroundColor: '#fdf2f8' },
-    { tag: t.quote, color: '#64748b', fontStyle: 'italic' },
-    { tag: t.meta, color: '#7c3aed' },
-    { tag: t.processingInstruction, color: '#7c3aed' },
-    { tag: t.list, color: '#0369a1' },
-    { tag: t.punctuation, color: '#94a3b8' },
-    { tag: t.labelName, color: '#0369a1' },
-  ])
-)
-
-export function Editor({ content, onChange, onScroll, scrollTo }: Props) {
+export function Editor({ content, onChange, onScroll, scrollTo, fontSize, isDark }: Props) {
   const editorViewRef = useRef<EditorView | null>(null)
   const isScrollingFromSync = useRef(false)
   const onScrollRef = useRef(onScroll)
   useEffect(() => { onScrollRef.current = onScroll }, [onScroll])
 
-  // Programmatic scroll from sync
   useEffect(() => {
     if (scrollTo === null || !editorViewRef.current) return
     const el = editorViewRef.current.scrollDOM
@@ -80,7 +31,6 @@ export function Editor({ content, onChange, onScroll, scrollTo }: Props) {
     requestAnimationFrame(() => { isScrollingFromSync.current = false })
   }, [scrollTo])
 
-  // Stable scroll-event extension (uses ref to avoid stale closure)
   const scrollExt = useMemo(
     () =>
       EditorView.domEventHandlers({
@@ -96,6 +46,68 @@ export function Editor({ content, onChange, onScroll, scrollTo }: Props) {
     []
   )
 
+  // ── Editor theme (dark/light + font size) ────────────────────
+  const editorTheme = useMemo(() => EditorView.theme({
+    '&': {
+      height: '100%',
+      fontSize: `${fontSize}px`,
+      background: isDark ? '#0f172a' : '#ffffff',
+      color: isDark ? '#cbd5e1' : '#1e293b',
+    },
+    '.cm-scroller': {
+      fontFamily: 'ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace',
+      lineHeight: '1.65',
+      overflow: 'auto',
+      background: isDark ? '#0f172a' : '#ffffff',
+    },
+    '.cm-content': {
+      padding: '12px 0',
+      caretColor: isDark ? '#60a5fa' : '#2563eb',
+      background: isDark ? '#0f172a' : '#ffffff',
+      color: isDark ? '#cbd5e1' : '#1e293b',
+    },
+    '.cm-line': { padding: '0 16px' },
+    '.cm-gutters': {
+      backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+      color: isDark ? '#475569' : '#94a3b8',
+      border: 'none',
+      borderRight: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
+      userSelect: 'none',
+    },
+    '.cm-lineNumbers .cm-gutterElement': {
+      padding: '0 10px 0 6px',
+      minWidth: '2.5rem',
+      textAlign: 'right',
+      fontSize: '12px',
+    },
+    '.cm-activeLineGutter': { backgroundColor: isDark ? '#1e293b' : '#f1f5f9', color: isDark ? '#94a3b8' : '#475569' },
+    '.cm-activeLine': { backgroundColor: isDark ? 'rgba(30,41,59,0.6)' : '#f8fafc' },
+    '.cm-cursor, .cm-dropCursor': { borderLeftColor: isDark ? '#60a5fa' : '#2563eb' },
+    '.cm-selectionBackground': { backgroundColor: isDark ? '#1e3a5f' : '#dbeafe' },
+    '&.cm-focused .cm-selectionBackground': { backgroundColor: isDark ? '#1d4ed8' : '#bfdbfe' },
+    '.cm-searchMatch': { backgroundColor: isDark ? '#713f12' : '#fef08a', outline: '1px solid #ca8a04' },
+    '.cm-searchMatch-selected': { backgroundColor: isDark ? '#d97706' : '#f59e0b' },
+  }, { dark: isDark }), [fontSize, isDark])
+
+  // ── Markdown syntax colours ───────────────────────────────────
+  const mdHighlight = useMemo(() => syntaxHighlighting(
+    HighlightStyle.define([
+      { tag: [t.heading1, t.heading2, t.heading3, t.heading4, t.heading5, t.heading6], fontWeight: '700', color: isDark ? '#f1f5f9' : '#0f172a' },
+      { tag: t.strong, fontWeight: '700' },
+      { tag: t.emphasis, fontStyle: 'italic' },
+      { tag: t.strikethrough, textDecoration: 'line-through', color: isDark ? '#64748b' : '#94a3b8' },
+      { tag: t.link, color: isDark ? '#60a5fa' : '#2563eb', textDecoration: 'underline' },
+      { tag: t.url, color: isDark ? '#475569' : '#64748b' },
+      { tag: t.monospace, color: isDark ? '#f9a8d4' : '#9d174d', backgroundColor: isDark ? '#2d1b3d' : '#fdf2f8' },
+      { tag: t.quote, color: isDark ? '#475569' : '#64748b', fontStyle: 'italic' },
+      { tag: t.meta, color: isDark ? '#a78bfa' : '#7c3aed' },
+      { tag: t.processingInstruction, color: isDark ? '#a78bfa' : '#7c3aed' },
+      { tag: t.list, color: isDark ? '#38bdf8' : '#0369a1' },
+      { tag: t.punctuation, color: isDark ? '#475569' : '#94a3b8' },
+      { tag: t.labelName, color: isDark ? '#38bdf8' : '#0369a1' },
+    ])
+  ), [isDark])
+
   const extensions = useMemo(
     () => [
       markdown({ base: markdownLanguage }),
@@ -105,7 +117,7 @@ export function Editor({ content, onChange, onScroll, scrollTo }: Props) {
       keymap.of([indentWithTab]),
       EditorView.lineWrapping,
     ],
-    [scrollExt]
+    [scrollExt, mdHighlight, editorTheme]
   )
 
   const handleCreate = useCallback((view: EditorView) => {
@@ -113,8 +125,8 @@ export function Editor({ content, onChange, onScroll, scrollTo }: Props) {
   }, [])
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 border-b border-gray-200 uppercase tracking-wide shrink-0">
+    <div className="flex flex-col h-full overflow-hidden dark:bg-slate-900">
+      <div className="px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 border-b border-gray-200 uppercase tracking-wide shrink-0 dark:bg-slate-900 dark:text-slate-500 dark:border-slate-700">
         Editor
       </div>
       <CodeMirror
@@ -144,7 +156,7 @@ export function Editor({ content, onChange, onScroll, scrollTo }: Props) {
           highlightSelectionMatches: false,
           closeBracketsKeymap: false,
           defaultKeymap: true,
-          searchKeymap: false,
+          searchKeymap: true,
           historyKeymap: true,
           foldKeymap: false,
           completionKeymap: false,

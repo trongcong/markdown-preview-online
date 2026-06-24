@@ -1,12 +1,13 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string'
 import type { LayoutMode } from './types'
 import { useTabs } from './hooks/useTabs'
 import { useLocalStorage } from './hooks/useLocalStorage'
+import { useDarkMode } from './hooks/useDarkMode'
 import { TabBar } from './components/TabBar'
 import { Toolbar } from './components/Toolbar'
 import { Editor } from './components/Editor'
-import { Preview } from './components/Preview'
+import { Preview, type PreviewHandle } from './components/Preview'
 
 export default function App() {
   const { tabs, activeTab, activeTabId, setActiveTabId, addTab, closeTab, renameTab, updateContent, loadShared } =
@@ -15,13 +16,17 @@ export default function App() {
   const [layoutMode, setLayoutMode] = useLocalStorage<LayoutMode>('mpo-layout', 'split')
   const [syncScroll, setSyncScroll] = useLocalStorage<boolean>('mpo-sync', true)
   const [splitPercent, setSplitPercent] = useLocalStorage<number>('mpo-split', 50)
+  const [fontSize, setFontSize] = useLocalStorage<number>('mpo-font-size', 15)
   const [mobilePanel, setMobilePanel] = useState<'editor' | 'preview'>('editor')
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768)
+
+  const [dark, setDark] = useDarkMode()
 
   const [shareCopied, setShareCopied] = useState(false)
   const shareTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const previewRef = useRef<PreviewHandle>(null)
   const [editorScrollTo, setEditorScrollTo] = useState<number | null>(null)
   const [previewScrollTo, setPreviewScrollTo] = useState<number | null>(null)
   const lastScrollSource = useRef<'editor' | 'preview' | null>(null)
@@ -82,12 +87,70 @@ export default function App() {
     const encoded = compressToEncodedURIComponent(activeTab.content)
     const shareUrl = `${window.location.origin}${window.location.pathname}#share=${encoded}`
     history.replaceState(null, '', `#share=${encoded}`)
-    navigator.clipboard.writeText(shareUrl).catch(() => {
-      // clipboard failed; URL is still updated in the address bar
-    })
+    navigator.clipboard.writeText(shareUrl).catch(() => {})
     setShareCopied(true)
     if (shareTimer.current) clearTimeout(shareTimer.current)
     shareTimer.current = setTimeout(() => setShareCopied(false), 2000)
+  }, [activeTab.content])
+
+  // Export .md
+  const handleExportMD = useCallback(() => {
+    const blob = new Blob([activeTab.content], { type: 'text/markdown;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = Object.assign(document.createElement('a'), {
+      href: url,
+      download: `${activeTab.title.replace(/[^a-z0-9]/gi, '-')}.md`,
+    })
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, [activeTab.content, activeTab.title])
+
+  // Export .html (uses the rendered preview HTML)
+  const handleExportHTML = useCallback(() => {
+    const inner = previewRef.current?.getHTML() ?? ''
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${activeTab.title}</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1.5rem; line-height: 1.7; color: #1e293b; }
+  pre { background: #282c34; color: #abb2bf; padding: 1em 1.25em; border-radius: 0.5rem; overflow-x: auto; }
+  code { font-family: ui-monospace, Menlo, monospace; font-size: 0.875em; }
+  :not(pre) > code { color: #9d174d; background: #fdf2f8; padding: 0.1em 0.38em; border-radius: 0.25rem; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #e2e8f0; padding: 0.5em 0.75em; }
+  th { background: #f8fafc; }
+  blockquote { border-left: 4px solid #60a5fa; margin: 0; padding-left: 1em; color: #475569; }
+  img { max-width: 100%; }
+</style>
+</head>
+<body>
+${inner}
+</body>
+</html>`
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = Object.assign(document.createElement('a'), {
+      href: url,
+      download: `${activeTab.title.replace(/[^a-z0-9]/gi, '-')}.html`,
+    })
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, [activeTab.title])
+
+  // Word / char / line counts
+  const stats = useMemo(() => {
+    const text = activeTab.content
+    const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length
+    const chars = text.length
+    const lines = text === '' ? 0 : text.split('\n').length
+    return { words, chars, lines }
   }, [activeTab.content])
 
   // Resize handle
@@ -122,7 +185,7 @@ export default function App() {
     showPreview && isDesktop ? { width: `${splitPercent}%` } : undefined
 
   return (
-    <div className="flex flex-col h-screen bg-white overflow-hidden">
+    <div className="flex flex-col h-screen bg-white overflow-hidden dark:bg-slate-800">
       <Toolbar
         layoutMode={layoutMode}
         onLayoutChange={setLayoutMode}
@@ -133,6 +196,12 @@ export default function App() {
         showMobileToggle={layoutMode === 'split'}
         onShare={handleShare}
         shareCopied={shareCopied}
+        isDark={dark}
+        onDarkToggle={() => setDark((d) => !d)}
+        fontSize={fontSize}
+        onFontSizeChange={setFontSize}
+        onExportMD={handleExportMD}
+        onExportHTML={handleExportHTML}
       />
       <TabBar
         tabs={tabs}
@@ -162,6 +231,8 @@ export default function App() {
               onChange={(val) => updateContent(activeTab.id, val)}
               onScroll={handleEditorScroll}
               scrollTo={syncScroll ? editorScrollTo : null}
+              fontSize={fontSize}
+              isDark={dark}
             />
           </div>
         )}
@@ -169,7 +240,7 @@ export default function App() {
         {/* Resize handle — desktop only, split mode only */}
         {showEditor && showPreview && (
           <div
-            className="hidden md:flex w-1 shrink-0 bg-gray-200 hover:bg-blue-400 active:bg-blue-500 cursor-col-resize transition-colors"
+            className="hidden md:flex w-1 shrink-0 bg-gray-200 hover:bg-blue-400 active:bg-blue-500 cursor-col-resize transition-colors dark:bg-slate-600 dark:hover:bg-blue-500"
             onMouseDown={startResize}
           />
         )}
@@ -187,12 +258,23 @@ export default function App() {
             ].join(' ')}
           >
             <Preview
+              ref={previewRef}
               content={activeTab.content}
               onScroll={handlePreviewScroll}
               scrollTo={syncScroll ? previewScrollTo : null}
+              isDark={dark}
             />
           </div>
         )}
+      </div>
+
+      {/* Status bar */}
+      <div className="flex items-center px-4 py-1 text-[11px] text-gray-400 bg-gray-50 border-t border-gray-200 shrink-0 select-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-500">
+        <span>{stats.words} words</span>
+        <span className="mx-2 opacity-40">·</span>
+        <span>{stats.chars} chars</span>
+        <span className="mx-2 opacity-40">·</span>
+        <span>{stats.lines} lines</span>
       </div>
     </div>
   )

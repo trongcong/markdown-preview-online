@@ -1,20 +1,23 @@
-import { useRef, useEffect, useCallback, lazy, Suspense } from 'react'
+import { useRef, useEffect, useCallback, lazy, Suspense, forwardRef, useImperativeHandle } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import type { Element, Text } from 'hast'
 import 'highlight.js/styles/atom-one-dark.css'
 
-// Lazy-load MermaidBlock so the heavy mermaid bundle is only fetched when a
-// diagram is first encountered, not on initial page load.
 const MermaidBlock = lazy(() =>
   import('./MermaidBlock').then((m) => ({ default: m.MermaidBlock })),
 )
+
+export interface PreviewHandle {
+  getHTML: () => string
+}
 
 interface Props {
   content: string
   onScroll: (ratio: number) => void
   scrollTo: number | null
+  isDark: boolean
 }
 
 type PreProps = React.HTMLAttributes<HTMLPreElement> & { node?: Element }
@@ -45,13 +48,21 @@ const markdownComponents = {
   },
 }
 
-export function Preview({ content, onScroll, scrollTo }: Props) {
-  const ref = useRef<HTMLDivElement>(null)
+export const Preview = forwardRef<PreviewHandle, Props>(function Preview(
+  { content, onScroll, scrollTo, isDark },
+  ref,
+) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const proseRef = useRef<HTMLDivElement>(null)
   const isScrollingFromSync = useRef(false)
 
+  useImperativeHandle(ref, () => ({
+    getHTML: () => proseRef.current?.innerHTML ?? '',
+  }))
+
   useEffect(() => {
-    if (scrollTo === null || !ref.current) return
-    const el = ref.current
+    if (scrollTo === null || !scrollRef.current) return
+    const el = scrollRef.current
     const maxScroll = el.scrollHeight - el.clientHeight
     if (maxScroll <= 0) return
     isScrollingFromSync.current = true
@@ -60,8 +71,8 @@ export function Preview({ content, onScroll, scrollTo }: Props) {
   }, [scrollTo])
 
   const handleScroll = useCallback(() => {
-    if (isScrollingFromSync.current || !ref.current) return
-    const el = ref.current
+    if (isScrollingFromSync.current || !scrollRef.current) return
+    const el = scrollRef.current
     const maxScroll = el.scrollHeight - el.clientHeight
     if (maxScroll <= 0) return
     onScroll(el.scrollTop / maxScroll)
@@ -69,11 +80,21 @@ export function Preview({ content, onScroll, scrollTo }: Props) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 border-b border-gray-200 uppercase tracking-wide shrink-0">
+      <div className="px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 border-b border-gray-200 uppercase tracking-wide shrink-0 dark:bg-slate-900 dark:text-slate-500 dark:border-slate-700">
         Preview
       </div>
-      <div ref={ref} className="flex-1 overflow-auto" onScroll={handleScroll}>
-        <div className="prose max-w-none p-5 prose-img:rounded-lg prose-a:text-blue-600 prose-blockquote:border-l-blue-400 prose-blockquote:text-gray-600">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-auto dark:bg-slate-800"
+        onScroll={handleScroll}
+      >
+        <div
+          ref={proseRef}
+          className={[
+            'prose max-w-none p-5 prose-img:rounded-lg prose-a:text-blue-600 prose-blockquote:border-l-blue-400 prose-blockquote:text-gray-600',
+            isDark ? 'prose-invert prose-a:text-blue-400 prose-blockquote:text-slate-400' : '',
+          ].join(' ')}
+        >
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }]]}
@@ -85,4 +106,4 @@ export function Preview({ content, onScroll, scrollTo }: Props) {
       </div>
     </div>
   )
-}
+})

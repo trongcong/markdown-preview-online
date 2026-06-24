@@ -19,6 +19,47 @@ function downloadSVG(svg: string) {
   URL.revokeObjectURL(url)
 }
 
+function downloadPNG(svgStr: string) {
+  const dim = getSVGDimensions(svgStr)
+  const scale = 2
+  const w = (dim?.w ?? 800) * scale
+  const h = (dim?.h ?? 600) * scale
+
+  const responsiveSvgStr = (() => {
+    try {
+      const doc = new DOMParser().parseFromString(svgStr, 'image/svg+xml')
+      const el = doc.documentElement
+      el.setAttribute('width', String(w))
+      el.setAttribute('height', String(h))
+      return new XMLSerializer().serializeToString(doc)
+    } catch { return svgStr }
+  })()
+
+  const blob = new Blob([responsiveSvgStr], { type: 'image/svg+xml;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const img = new Image()
+  img.onload = () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')!
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, w, h)
+    ctx.drawImage(img, 0, 0, w, h)
+    URL.revokeObjectURL(url)
+    canvas.toBlob((pngBlob) => {
+      if (!pngBlob) return
+      const pngUrl = URL.createObjectURL(pngBlob)
+      const a = Object.assign(document.createElement('a'), { href: pngUrl, download: 'diagram.png' })
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(pngUrl)
+    }, 'image/png')
+  }
+  img.src = url
+}
+
 // Read natural pixel dimensions from mermaid SVG (width/height attrs or viewBox)
 function getSVGDimensions(svgStr: string): { w: number; h: number } | null {
   try {
@@ -198,6 +239,7 @@ export function MermaidBlock({ code }: Props) {
   const responsiveSvg = useMemo(() => (svg ? toResponsiveSVG(svg) : ''), [svg])
 
   const handleDownload = useCallback(() => downloadSVG(svg), [svg])
+  const handleDownloadPNG = useCallback(() => downloadPNG(svg), [svg])
 
   if (error) {
     return (
@@ -298,7 +340,14 @@ export function MermaidBlock({ code }: Props) {
                   className="flex items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1 text-xs text-gray-600 hover:bg-gray-50"
                 >
                   <DownloadIcon />
-                  Download SVG
+                  SVG
+                </button>
+                <button
+                  onClick={handleDownloadPNG}
+                  className="flex items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1 text-xs text-gray-600 hover:bg-gray-50"
+                >
+                  <DownloadIcon />
+                  PNG
                 </button>
                 <button
                   onClick={() => setZoomed(false)}
