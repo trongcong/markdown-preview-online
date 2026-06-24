@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+  * { box-sizing: border-box; }
+  html, body, #root { height: 100%; margin: 0; padding: 0; }
+}
+
+/* ── Inline code (not inside pre) ────────────────────────────── */
+.prose :not(pre) > code {
+  color: #9d174d;           /* pink-800 — high contrast (~8:1) */
+  background: #fdf2f8;      /* pink-50  */
+  padding: 0.1em 0.38em;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-weight: 500;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+  word-break: break-word;
+}
+
+/* ── Code block (pre > code) ─────────────────────────────────── */
+.prose pre {
+  margin: 1.25rem 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Background & base colour set explicitly so import order never matters.
+   Token-level colours (.hljs-keyword etc.) target child <span>s, not this
+   element, so setting color here does NOT override them. */
+.hljs {
+  display: block;
+  padding: 1.1em 1.25em;
+  background: #282c34;   /* atom-one-dark */
+  color: #abb2bf;
+  font-size: 0.875em;
+  line-height: 1.75;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+}
+
+/* Fallback for code blocks without a recognised language (no .hljs class) */
+.prose pre > code:not(.hljs) {
+  display: block;
+  padding: 1.1em 1.25em;
+  background: #282c34;
+  color: #abb2bf;
+  font-size: 0.875em;
+  line-height: 1.75;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+}
+
+/* ── Resize-drag cursor lock ─────────────────────────────────── */
+.is-resizing,
+.is-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
