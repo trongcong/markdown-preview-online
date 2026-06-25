@@ -8,12 +8,16 @@ interface Props {
   onAdd: () => void
   onClose: (id: string) => void
   onRename: (id: string, title: string) => void
+  onReorder: (fromId: string, toId: string) => void
 }
 
-export function TabBar({ tabs, activeTabId, onSelect, onAdd, onClose, onRename }: Props) {
+export function TabBar({ tabs, activeTabId, onSelect, onAdd, onClose, onRename, onReorder }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
 
   useEffect(() => {
     if (editingId && inputRef.current) {
@@ -40,12 +44,42 @@ export function TabBar({ tabs, activeTabId, onSelect, onAdd, onClose, onRename }
     if (e.key === 'Escape') setEditingId(null)
   }
 
+  function handleDragStart(e: React.DragEvent, id: string) {
+    e.stopPropagation()
+    setDragId(id)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', id)
+  }
+
+  function handleDragOver(e: React.DragEvent, id: string) {
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = 'move'
+    if (id !== dragId) setDragOverId(id)
+  }
+
+  function handleDrop(e: React.DragEvent, toId: string) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (dragId && dragId !== toId) onReorder(dragId, toId)
+    setDragId(null)
+    setDragOverId(null)
+  }
+
+  function handleDragEnd(e: React.DragEvent) {
+    e.stopPropagation()
+    setDragId(null)
+    setDragOverId(null)
+  }
+
   return (
     <div className="flex items-center border-b border-gray-200 bg-gray-50 overflow-x-auto dark:bg-slate-900 dark:border-slate-700">
       <div role="tablist" aria-label="Document tabs" className="flex min-w-0">
         {tabs.map((tab) => {
           const isActive = tab.id === activeTabId
           const isEditing = editingId === tab.id
+          const isDragging = dragId === tab.id
+          const isOver = dragOverId === tab.id
 
           return (
             <div
@@ -54,11 +88,21 @@ export function TabBar({ tabs, activeTabId, onSelect, onAdd, onClose, onRename }
               aria-selected={isActive}
               aria-label={tab.title}
               tabIndex={isActive ? 0 : -1}
-              className={`group flex items-center gap-1 px-3 py-2 border-r border-gray-200 dark:border-slate-700 cursor-pointer min-w-0 shrink-0 select-none ${
+              draggable={!isEditing}
+              onDragStart={(e) => handleDragStart(e, tab.id)}
+              onDragOver={(e) => handleDragOver(e, tab.id)}
+              onDrop={(e) => handleDrop(e, tab.id)}
+              onDragEnd={handleDragEnd}
+              onDragLeave={() => setDragOverId(null)}
+              className={[
+                'group flex items-center gap-1 px-3 py-2 border-r border-gray-200 dark:border-slate-700',
+                'cursor-pointer min-w-0 shrink-0 select-none transition-opacity',
                 isActive
                   ? 'bg-white text-gray-900 border-b-2 border-b-blue-500 -mb-px dark:bg-slate-800 dark:text-slate-100'
-                  : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
-              }`}
+                  : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200',
+                isDragging ? 'opacity-40' : '',
+                isOver ? 'border-l-2 border-l-blue-500' : '',
+              ].join(' ')}
               onClick={() => !isEditing && onSelect(tab.id)}
             >
               {isEditing ? (
@@ -74,10 +118,7 @@ export function TabBar({ tabs, activeTabId, onSelect, onAdd, onClose, onRename }
               ) : (
                 <span
                   className="text-sm truncate max-w-32"
-                  onDoubleClick={(e) => {
-                    e.stopPropagation()
-                    startEdit(tab)
-                  }}
+                  onDoubleClick={(e) => { e.stopPropagation(); startEdit(tab) }}
                   title={tab.title}
                 >
                   {tab.title}
@@ -86,10 +127,7 @@ export function TabBar({ tabs, activeTabId, onSelect, onAdd, onClose, onRename }
               {tabs.length > 1 && (
                 <button
                   className="ml-1 w-4 h-4 flex items-center justify-center rounded text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600 transition-opacity shrink-0 dark:hover:bg-slate-600 dark:hover:text-slate-200"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onClose(tab.id)
-                  }}
+                  onClick={(e) => { e.stopPropagation(); onClose(tab.id) }}
                   title={`Close ${tab.title}`}
                   aria-label={`Close ${tab.title}`}
                 >

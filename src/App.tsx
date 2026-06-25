@@ -11,7 +11,7 @@ import { Editor } from './components/Editor'
 import { Preview, type PreviewHandle } from './components/Preview'
 
 export default function App() {
-  const { tabs, activeTab, activeTabId, setActiveTabId, addTab, closeTab, renameTab, updateContent, loadShared, loadFile } =
+  const { tabs, activeTab, activeTabId, setActiveTabId, addTab, closeTab, renameTab, updateContent, loadShared, loadFile, reorderTabs } =
     useTabs()
 
   const [layoutMode, setLayoutMode] = useLocalStorage<LayoutMode>('mpo-layout', 'split')
@@ -286,6 +286,7 @@ ${inner}
         onAdd={addTab}
         onClose={closeTab}
         onRename={renameTab}
+        onReorder={reorderTabs}
       />
 
       <div ref={containerRef} className="flex flex-1 min-h-0 overflow-hidden">
