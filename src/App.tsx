@@ -9,6 +9,7 @@ import { TabBar } from './components/TabBar'
 import { Toolbar } from './components/Toolbar'
 import { Editor } from './components/Editor'
 import { Preview, type PreviewHandle } from './components/Preview'
+import { trackEvent } from './lib/analytics'
 
 export default function App() {
   const { tabs, activeTab, activeTabId, setActiveTabId, addTab, closeTab, renameTab, updateContent, loadShared, loadFile, reorderTabs } =
@@ -88,6 +89,7 @@ export default function App() {
     const decoded = decompressFromEncodedURIComponent(hash.slice(7))
     if (decoded) {
       loadShared(decoded)
+      trackEvent({ name: 'shared_link_visit' })
       history.replaceState(null, '', window.location.pathname)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -135,6 +137,7 @@ export default function App() {
     const shareUrl = `${window.location.origin}${window.location.pathname}#share=${encoded}`
     history.replaceState(null, '', `#share=${encoded}`)
     navigator.clipboard.writeText(shareUrl).catch(() => {})
+    trackEvent({ name: 'share_link_copy' })
     setShareCopied(true)
     if (shareTimer.current) clearTimeout(shareTimer.current)
     shareTimer.current = setTimeout(() => setShareCopied(false), 2000)
@@ -152,12 +155,14 @@ export default function App() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+    trackEvent({ name: 'export_file', type: 'md' })
   }, [activeTab.content, activeTab.title])
 
   // Export PDF via browser print dialog
   const handleExportPDF = useCallback(() => {
     const prev = document.title
     document.title = activeTab.title
+    trackEvent({ name: 'export_file', type: 'pdf' })
     window.print()
     document.title = prev
   }, [activeTab.title])
@@ -197,6 +202,7 @@ ${inner}
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+    trackEvent({ name: 'export_file', type: 'html' })
   }, [activeTab.title])
 
   // Word / char / line counts
@@ -263,7 +269,7 @@ ${inner}
       )}
       <Toolbar
         layoutMode={layoutMode}
-        onLayoutChange={setLayoutMode}
+        onLayoutChange={(mode) => { setLayoutMode(mode); trackEvent({ name: 'layout_change', mode }) }}
         syncScroll={syncScroll}
         onSyncScrollToggle={() => setSyncScroll((v) => !v)}
         mobilePanel={mobilePanel}
@@ -272,7 +278,7 @@ ${inner}
         onShare={handleShare}
         shareCopied={shareCopied}
         isDark={dark}
-        onDarkToggle={() => setDark((d) => !d)}
+        onDarkToggle={() => setDark((d) => { trackEvent({ name: 'dark_mode_toggle', enabled: !d }); return !d })}
         fontSize={fontSize}
         onFontSizeChange={setFontSize}
         onExportMD={handleExportMD}
