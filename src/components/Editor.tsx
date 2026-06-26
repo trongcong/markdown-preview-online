@@ -108,12 +108,11 @@ export function Editor({ content, onChange, onScroll, scrollTo, fontSize, isDark
     () => [
       markdown({ base: markdownLanguage }),
       mdHighlight,
-      editorTheme,
       scrollExt,
       keymap.of([indentWithTab]),
       EditorView.lineWrapping,
     ],
-    [scrollExt, mdHighlight, editorTheme]
+    [scrollExt, mdHighlight]
   )
 
   const handleCreate = useCallback((view: EditorView) => {
@@ -130,6 +129,7 @@ export function Editor({ content, onChange, onScroll, scrollTo, fontSize, isDark
         onChange={onChange}
         onCreateEditor={handleCreate}
         extensions={extensions}
+        theme={editorTheme}
         height="100%"
         className="flex-1 overflow-hidden [&_.cm-editor]:h-full [&_.cm-editor]:outline-none"
         basicSetup={{

@@ -4,7 +4,7 @@ import { useLocalStorage } from './useLocalStorage'
 import { STORAGE_KEY, DEFAULT_CONTENT, NEW_TAB_CONTENT } from '../constants'
 
 function extractH1(content: string): string | null {
-  const match = content.match(/^#\s+(.+)/m)
+  const match = content.match(/^#{1,6}\s+(.+)/m)
   return match ? match[1].trim() : null
 }
 

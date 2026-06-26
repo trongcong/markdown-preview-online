@@ -11,6 +11,7 @@ interface Props {
   showMobileToggle: boolean
   onShare: () => void
   shareCopied: boolean
+  shareLong: boolean
   isDark: boolean
   onDarkToggle: () => void
   fontSize: number
@@ -39,6 +40,7 @@ export function Toolbar({
   showMobileToggle,
   onShare,
   shareCopied,
+  shareLong,
   isDark,
   onDarkToggle,
   fontSize,
@@ -139,25 +141,34 @@ export function Toolbar({
         </div>
 
         {/* Share */}
-        <button
-          onClick={onShare}
-          title="Share via URL"
-          aria-label="Share current tab via URL"
-          className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md border transition-colors ${
-            shareCopied
-              ? 'border-green-300 text-green-600 bg-green-50 dark:border-green-700 dark:text-green-400 dark:bg-green-900/30'
-              : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50 dark:border-slate-600 dark:text-slate-400 dark:bg-slate-800 dark:hover:bg-slate-700'
-          }`}
-        >
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="3" r="1.5" />
-            <circle cx="12" cy="13" r="1.5" />
-            <circle cx="4" cy="8" r="1.5" />
-            <line x1="10.6" y1="3.8" x2="5.4" y2="7.2" />
-            <line x1="10.6" y1="12.2" x2="5.4" y2="8.8" />
-          </svg>
-          {shareCopied ? 'Copied!' : 'Share'}
-        </button>
+        <div className="relative">
+          <button
+            onClick={onShare}
+            title="Share via URL"
+            aria-label="Share current tab via URL"
+            className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md border transition-colors ${
+              shareCopied && shareLong
+                ? 'border-amber-300 text-amber-600 bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:bg-amber-900/30'
+                : shareCopied
+                ? 'border-green-300 text-green-600 bg-green-50 dark:border-green-700 dark:text-green-400 dark:bg-green-900/30'
+                : 'border-gray-200 text-gray-500 bg-white hover:bg-gray-50 dark:border-slate-600 dark:text-slate-400 dark:bg-slate-800 dark:hover:bg-slate-700'
+            }`}
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="3" r="1.5" />
+              <circle cx="12" cy="13" r="1.5" />
+              <circle cx="4" cy="8" r="1.5" />
+              <line x1="10.6" y1="3.8" x2="5.4" y2="7.2" />
+              <line x1="10.6" y1="12.2" x2="5.4" y2="8.8" />
+            </svg>
+            {shareCopied ? (shareLong ? '⚠ Copied' : 'Copied!') : 'Share'}
+          </button>
+          {shareCopied && shareLong && (
+            <div className="absolute right-0 top-full mt-1.5 z-20 w-56 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 shadow-md dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+              Link dài — có thể không gửi được qua một số platform. Thử export <strong>.md</strong> thay thế.
+            </div>
+          )}
+        </div>
 
         {/* Sync scroll */}
         <button

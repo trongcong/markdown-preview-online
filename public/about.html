@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About Markdown Preview Online — Free Browser-Based Markdown Editor</title>
+  <meta name="description" content="Markdown Preview Online is a free, browser-only Markdown editor with live preview, GitHub Flavored Markdown, Mermaid diagrams, multiple tabs, dark mode, and share-via-URL. No account needed." />
+  <meta name="keywords" content="markdown editor online, free markdown editor, markdown preview tool, github flavored markdown, mermaid diagram editor, browser markdown editor, no signup markdown" />
+  <link rel="canonical" href="https://trongcong.github.io/markdown-preview-online/about.html" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://trongcong.github.io/markdown-preview-online/about.html" />
+  <meta property="og:title" content="About Markdown Preview Online — Free Browser-Based Markdown Editor" />
+  <meta property="og:description" content="A fast, privacy-friendly Markdown editor that runs entirely in your browser. No sign-in, no data sent to any server." />
+  <meta property="og:image" content="https://trongcong.github.io/markdown-preview-online/og-image.png" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://trongcong.github.io/markdown-preview-online/about.html" />
+  <meta name="twitter:title" content="About Markdown Preview Online — Free Browser-Based Markdown Editor" />
+  <meta name="twitter:description" content="A fast, privacy-friendly Markdown editor that runs entirely in your browser. No sign-in, no data sent to any server." />
+  <meta name="twitter:image" content="https://trongcong.github.io/markdown-preview-online/og-image.png" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Markdown Preview Online?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Markdown Preview Online is a free, browser-based Markdown editor with real-time preview. It supports GitHub Flavored Markdown (GFM), Mermaid diagrams, syntax highlighting, multiple tabs, dark mode, and share-via-URL — all without requiring an account or installing anything."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Markdown Preview Online store my data?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. All your content stays in your browser's localStorage. Nothing is sent to any server. The app works completely offline after the first load."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What Markdown features are supported?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Markdown Preview Online supports the full GitHub Flavored Markdown (GFM) spec: headings, bold, italic, strikethrough, tables, task lists, fenced code blocks with syntax highlighting, blockquotes, footnotes, and HTML. It also renders Mermaid diagrams (flowcharts, sequence diagrams, Gantt charts, and more)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I share my Markdown documents?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Click the Share button to copy a URL that encodes your entire document using DEFLATE compression. The recipient opens the link and sees your document instantly — no account needed on either end."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What export formats are supported?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You can export your document as a .md Markdown file, a self-contained .html file with inline styles, or as a PDF using the browser's print dialog."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does it work on mobile?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Markdown Preview Online is responsive and works on mobile browsers. On small screens you can toggle between the editor and preview panels."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <link rel="icon" type="image/svg+xml" href="/markdown-preview-online/favicon.svg" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; color: #1e293b; background: #f8fafc; line-height: 1.7; }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    header { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 0 1.5rem; }
+    .header-inner { max-width: 860px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+    .logo { font-weight: 700; font-size: 1rem; color: #1e293b; }
+    .logo span { color: #2563eb; }
+    .nav-link { font-size: 0.875rem; color: #64748b; }
+
+    main { max-width: 860px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+
+    .hero { margin-bottom: 3.5rem; }
+    .badge { display: inline-block; background: #eff6ff; color: #2563eb; font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; margin-bottom: 1rem; border: 1px solid #bfdbfe; }
+    h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 800; line-height: 1.2; color: #0f172a; margin-bottom: 1rem; }
+    .hero p { font-size: 1.1rem; color: #475569; max-width: 620px; margin-bottom: 1.5rem; }
+    .cta { display: inline-flex; align-items: center; gap: 0.5rem; background: #2563eb; color: #fff; font-weight: 600; font-size: 0.9rem; padding: 0.65rem 1.5rem; border-radius: 0.5rem; transition: background 0.15s; }
+    .cta:hover { background: #1d4ed8; text-decoration: none; }
+    .cta-secondary { display: inline-flex; align-items: center; gap: 0.5rem; color: #475569; font-size: 0.9rem; padding: 0.65rem 1rem; }
+
+    section { margin-bottom: 3rem; }
+    h2 { font-size: 1.4rem; font-weight: 700; color: #0f172a; margin-bottom: 1.25rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e2e8f0; }
+    h3 { font-size: 1rem; font-weight: 600; color: #0f172a; margin-bottom: 0.4rem; }
+
+    .features { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+    .feature-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; }
+    .feature-icon { font-size: 1.4rem; margin-bottom: 0.5rem; }
+    .feature-card p { font-size: 0.875rem; color: #64748b; margin-top: 0.25rem; }
+
+    .use-cases { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; }
+    .use-case { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1rem 1.25rem; font-size: 0.875rem; }
+    .use-case strong { display: block; color: #0f172a; margin-bottom: 0.25rem; }
+    .use-case span { color: #64748b; }
+
+    .faq { display: flex; flex-direction: column; gap: 1rem; }
+    .faq-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem 1.5rem; }
+    .faq-item h3 { font-size: 0.95rem; color: #0f172a; margin-bottom: 0.5rem; }
+    .faq-item p { font-size: 0.875rem; color: #475569; }
+
+    .privacy-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0.75rem; padding: 1.25rem 1.5rem; font-size: 0.9rem; color: #166534; }
+    .privacy-box strong { display: block; margin-bottom: 0.25rem; font-size: 1rem; }
+
+    footer { border-top: 1px solid #e2e8f0; padding: 1.5rem; text-align: center; font-size: 0.8rem; color: #94a3b8; }
+
+    @media (max-width: 600px) {
+      .hero-actions { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DT88NQ4PEG"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DT88NQ4PEG');
+  </script>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="/markdown-preview-online/" class="logo">Markdown <span>Preview</span> Online</a>
+    <a href="/markdown-preview-online/" class="nav-link">Open Editor →</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="badge">Free &amp; Open Source</div>
+    <h1>The Markdown Editor That Stays Out of Your Way</h1>
+    <p>
+      A fast, privacy-first Markdown editor with live preview. Runs entirely in your browser —
+      no account, no installation, no data sent anywhere.
+    </p>
+    <div class="hero-actions" style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+      <a href="/markdown-preview-online/" class="cta">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+        Open the Editor
+      </a>
+      <a href="https://github.com/trongcong/markdown-preview-online" class="cta-secondary" target="_blank" rel="noopener">View on GitHub</a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section>
+    <h2>Features</h2>
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Live Preview</h3>
+        <p>See your rendered Markdown update in real time as you type, with synchronized scrolling.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📐</div>
+        <h3>GitHub Flavored Markdown</h3>
+        <p>Full GFM support: tables, task lists, strikethrough, fenced code blocks, footnotes, and more.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔀</div>
+        <h3>Mermaid Diagrams</h3>
+        <p>Render flowcharts, sequence diagrams, Gantt charts, ER diagrams, and more with Mermaid syntax.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗂️</div>
+        <h3>Multiple Tabs</h3>
+        <p>Work on several documents at once. Tabs auto-title from your first heading and can be reordered.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌙</div>
+        <h3>Dark Mode</h3>
+        <p>Full dark mode for both the editor and preview. Preference saved automatically.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h3>Share via URL</h3>
+        <p>Compress your document into a shareable URL using DEFLATE. No server, no account needed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📤</div>
+        <h3>Export</h3>
+        <p>Download as <code>.md</code>, self-contained <code>.html</code>, or PDF via the browser print dialog.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>Find &amp; Replace</h3>
+        <p>Built-in find and replace in the editor. Press <kbd>Ctrl+F</kbd> / <kbd>Cmd+F</kbd> to open.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📂</div>
+        <h3>Drag &amp; Drop</h3>
+        <p>Open <code>.md</code> files by dragging them directly onto the editor window.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Privacy -->
+  <section>
+    <h2>Privacy First</h2>
+    <div class="privacy-box">
+      <strong>🔒 Your content never leaves your browser.</strong>
+      All documents are stored only in your browser's localStorage. The app works fully offline after the first load.
+      Share links encode your content directly into the URL using compression — no servers involved.
+    </div>
+  </section>
+
+  <!-- Use cases -->
+  <section>
+    <h2>Who Uses It</h2>
+    <div class="use-cases">
+      <div class="use-case">
+        <strong>Developers</strong>
+        <span>Draft README files, API docs, and changelogs with live GFM preview.</span>
+      </div>
+      <div class="use-case">
+        <strong>Writers &amp; Bloggers</strong>
+        <span>Write and format articles in Markdown before publishing to any platform.</span>
+      </div>
+      <div class="use-case">
+        <strong>Students</strong>
+        <span>Take notes in Markdown and export to PDF or HTML to share with classmates.</span>
+      </div>
+      <div class="use-case">
+        <strong>Technical Writers</strong>
+        <span>Create documentation with diagrams using Mermaid and export to HTML.</span>
+      </div>
+      <div class="use-case">
+        <strong>Data Scientists</strong>
+        <span>Write and preview Markdown cells before adding them to Jupyter notebooks.</span>
+      </div>
+      <div class="use-case">
+        <strong>Teams</strong>
+        <span>Share quick docs with teammates via URL — no accounts, no friction.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section>
+    <h2>Frequently Asked Questions</h2>
+    <div class="faq">
+      <div class="faq-item">
+        <h3>What is Markdown Preview Online?</h3>
+        <p>Markdown Preview Online is a free, browser-based Markdown editor with real-time preview. It supports GitHub Flavored Markdown (GFM), Mermaid diagrams, syntax highlighting, multiple tabs, dark mode, and share-via-URL — all without requiring an account or installing anything.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Does it store my data?</h3>
+        <p>No. All your content stays in your browser's localStorage. Nothing is sent to any server. The app works completely offline after the first load.</p>
+      </div>
+      <div class="faq-item">
+        <h3>What Markdown features are supported?</h3>
+        <p>Full GitHub Flavored Markdown (GFM): headings, bold, italic, strikethrough, tables, task lists, fenced code blocks with syntax highlighting, blockquotes, footnotes, and inline HTML. Mermaid diagram blocks are also rendered.</p>
+      </div>
+      <div class="faq-item">
+        <h3>How does share-via-URL work?</h3>
+        <p>Clicking Share compresses your document using DEFLATE compression and encodes it into a URL hash. The recipient opens the link in their browser — no server stores the content at any point.</p>
+      </div>
+      <div class="faq-item">
+        <h3>What export formats are supported?</h3>
+        <p>You can export as a <code>.md</code> Markdown file, a self-contained <code>.html</code> file with inline styles, or as a PDF using the browser's print dialog.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Does it work on mobile?</h3>
+        <p>Yes. The interface is responsive and works on mobile browsers. On small screens you can toggle between the editor and preview panels.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Is it open source?</h3>
+        <p>Yes. The source code is available on <a href="https://github.com/trongcong/markdown-preview-online" target="_blank" rel="noopener">GitHub</a>.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>
+    <a href="/markdown-preview-online/">Markdown Preview Online</a> &nbsp;·&nbsp;
+    <a href="https://github.com/trongcong/markdown-preview-online" target="_blank" rel="noopener">GitHub</a>
+  </p>
+</footer>
+
+</body>
+</html>

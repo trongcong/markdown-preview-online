@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import type { DragEvent } from 'react'
-import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string'
+import { compressContent, decompressContent } from './lib/share'
 import type { LayoutMode } from './types'
 import { useTabs } from './hooks/useTabs'
 import { useLocalStorage } from './hooks/useLocalStorage'
@@ -25,6 +25,7 @@ export default function App() {
   const [dark, setDark] = useDarkMode()
 
   const [shareCopied, setShareCopied] = useState(false)
+  const [shareLong, setShareLong] = useState(false)
   const shareTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Drag & drop .md files
@@ -86,7 +87,7 @@ export default function App() {
   useEffect(() => {
     const hash = window.location.hash
     if (!hash.startsWith('#share=')) return
-    const decoded = decompressFromEncodedURIComponent(hash.slice(7))
+    const decoded = decompressContent(hash.slice(7))
     if (decoded) {
       loadShared(decoded)
       trackEvent({ name: 'shared_link_visit' })
@@ -133,14 +134,15 @@ export default function App() {
 
   // Share current tab content via URL hash
   const handleShare = useCallback(() => {
-    const encoded = compressToEncodedURIComponent(activeTab.content)
+    const encoded = compressContent(activeTab.content)
     const shareUrl = `${window.location.origin}${window.location.pathname}#share=${encoded}`
-    history.replaceState(null, '', `#share=${encoded}`)
+    const isLong = encoded.length > 1900
     navigator.clipboard.writeText(shareUrl).catch(() => {})
     trackEvent({ name: 'share_link_copy' })
     setShareCopied(true)
+    setShareLong(isLong)
     if (shareTimer.current) clearTimeout(shareTimer.current)
-    shareTimer.current = setTimeout(() => setShareCopied(false), 2000)
+    shareTimer.current = setTimeout(() => { setShareCopied(false); setShareLong(false) }, 3000)
   }, [activeTab.content])
 
   // Export .md
@@ -277,6 +279,7 @@ ${inner}
         showMobileToggle={layoutMode === 'split'}
         onShare={handleShare}
         shareCopied={shareCopied}
+        shareLong={shareLong}
         isDark={dark}
         onDarkToggle={() => setDark((d) => { trackEvent({ name: 'dark_mode_toggle', enabled: !d }); return !d })}
         fontSize={fontSize}
@@ -358,6 +361,14 @@ ${inner}
         <span>{stats.chars} chars</span>
         <span className="mx-2 opacity-40">·</span>
         <span>{stats.lines} lines</span>
+        <a
+          href="about.html"
+          className="ml-auto text-[11px] text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300 select-none"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          About
+        </a>
       </div>
     </div>
   )
