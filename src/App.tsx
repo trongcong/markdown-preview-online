@@ -27,6 +27,7 @@ export default function App() {
   const [shareCopied, setShareCopied] = useState(false)
   const [shareLong, setShareLong] = useState(false)
   const shareTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pendingPrintRef = useRef(false)
 
   // Drag & drop .md files
   const [isDraggingFile, setIsDraggingFile] = useState(false)
@@ -160,14 +161,82 @@ export default function App() {
     trackEvent({ name: 'export_file', type: 'md' })
   }, [activeTab.content, activeTab.title])
 
-  // Export PDF via browser print dialog
-  const handleExportPDF = useCallback(() => {
-    const prev = document.title
-    document.title = activeTab.title
-    trackEvent({ name: 'export_file', type: 'pdf' })
-    window.print()
-    document.title = prev
+  // Print rendered HTML in a hidden iframe — avoids React layout/visibility hacks
+  const executePrint = useCallback(() => {
+    const inner = previewRef.current?.getHTML() ?? ''
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${activeTab.title}</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1.5rem; line-height: 1.7; color: #1e293b; font-size: 11pt; }
+  h1 { font-size: 2em; font-weight: 700; margin: 1em 0 0.5em; color: #0f172a; }
+  h2 { font-size: 1.5em; font-weight: 600; margin: 1em 0 0.5em; }
+  h3 { font-size: 1.25em; font-weight: 600; margin: 0.75em 0 0.4em; }
+  h4, h5, h6 { font-size: 1em; font-weight: 600; margin: 0.75em 0 0.4em; }
+  p { margin: 0.75em 0; }
+  ul, ol { padding-left: 1.5em; margin: 0.75em 0; }
+  li { margin: 0.25em 0; }
+  a { color: #2563eb; text-decoration: underline; }
+  blockquote { border-left: 4px solid #60a5fa; margin: 1em 0; padding: 0.25em 0 0.25em 1em; color: #475569; }
+  hr { border: none; border-top: 1px solid #e2e8f0; margin: 1.5em 0; }
+  img { max-width: 100%; height: auto; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid #e2e8f0; padding: 0.5em 0.75em; text-align: left; }
+  th { background: #f8fafc; font-weight: 600; }
+  pre { background: #282c34; color: #abb2bf; padding: 1em 1.25em; border-radius: 0.5rem; overflow-x: auto; font-size: 0.875em; line-height: 1.75; }
+  code { font-family: ui-monospace, Menlo, monospace; font-size: 0.875em; }
+  :not(pre) > code { color: #9d174d; background: #fdf2f8; padding: 0.1em 0.38em; border-radius: 0.25rem; }
+  input[type="checkbox"] { margin-right: 0.4em; }
+  @media print {
+    body { margin: 0; }
+    pre, table, img { page-break-inside: avoid; }
+    h1, h2, h3 { page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>${inner}</body>
+</html>`
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const iframe = document.createElement('iframe')
+    iframe.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;opacity:0;pointer-events:none;z-index:-1'
+    document.body.appendChild(iframe)
+    iframe.src = url
+    iframe.onload = () => {
+      iframe.contentWindow?.print()
+      setTimeout(() => {
+        document.body.removeChild(iframe)
+        URL.revokeObjectURL(url)
+      }, 1000)
+    }
   }, [activeTab.title])
+
+  // If Preview isn't mounted (editor-only mode), switch to preview first then print
+  useEffect(() => {
+    const previewVisible = layoutMode === 'split' || layoutMode === 'preview'
+    if (!pendingPrintRef.current || !previewVisible) return
+    const timer = setTimeout(() => {
+      pendingPrintRef.current = false
+      executePrint()
+      setLayoutMode('editor')
+    }, 150)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layoutMode])
+
+  const handleExportPDF = useCallback(() => {
+    trackEvent({ name: 'export_file', type: 'pdf' })
+    const previewVisible = layoutMode === 'split' || layoutMode === 'preview'
+    if (!previewVisible) {
+      pendingPrintRef.current = true
+      setLayoutMode('preview')
+      return
+    }
+    executePrint()
+  }, [layoutMode, executePrint])
 
   // Export .html (uses the rendered preview HTML)
   const handleExportHTML = useCallback(() => {
